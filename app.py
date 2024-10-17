@@ -36,13 +36,20 @@ def main():
     st.data_editor(
         train,
         column_config={
-            width=="large",
+            "train": st.column_config.Column(
+                width="large",
+                help="Streamlit widget commands",
+                required=True
+            )
+            
 
 
         },
         hide_index=True,
         num_rows="dynamic"
-    )    
+    )
+
+    
 
 
     st.divider()
