@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 def main():
+    st.title("test 1")
     arr = np.random.normal(1, 1, size=100)
     fig, ax = plt.subplots()
     ax.hist(arr, bins=20)
