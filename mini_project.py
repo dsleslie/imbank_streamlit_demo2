@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import scipy
+from scipy.stats import levene, shapiro, ttest_ind
 
 # 데이터 불러오기
 @st.cache_data
@@ -42,6 +44,7 @@ st.divider()
 
 st.header(":green-background[Analysis on Features]")
 st.subheader(":orange-background[Loan approval based on ***Loan Intent***]")
+# 제목 바꿔야함
 def stacked_bar_plot(df, feature, target='loan_status'):
     crosstab = pd.crosstab(df[feature], df[target], normalize='index')
 
@@ -49,22 +52,30 @@ def stacked_bar_plot(df, feature, target='loan_status'):
     ax=crosstab.plot(kind='bar',stacked=True, cmap='coolwarm', ax=ax)
     ax.set_title(f'Stacked Bar Plot of {feature} vs {target}')
     ax.set_ylabel('Proportion')
+    return fig
     #plt.show()
-st.pyplot(stacked_bar_plot(train, 'loan_intent'))
-
-
-st.subheader(":orange-background[Loan approval based on ***homeownership type***]")
-st.pyplot(stacked_bar_plot(train, 'person_home_ownership'))
+str_df_train=train.select_dtypes(include=['object'])
+x_vari= st.selectbox("Select feature", str_df_train.columns)
+fig=stacked_bar_plot(train, x_vari)
+st.pyplot(fig)
 
 
 st.subheader(":orange-background[Number of loan applications by ***homeownership type***]")
-fig, ax = plt.subplots(nrows = 1, ncols = 1, figsize=(10, 6))
-ax = sns.countplot(data=train, x='person_home_ownership')
-ax.set_title("Distribution of Loan Applicants by Home Ownership")
+# 제목바꿔야함
+def number_loan_application(df, feature):
+    fig, ax = plt.subplots(nrows = 1, ncols = 1, figsize=(6, 4))
+    ax = sns.countplot(data=train, x=feature)
+    ax.set_title(f"Distribution of Loan Applicants by {feature}")
+    ax.set_xticklabels(ax.get_xticklabels(),rotation=45)
+    return fig
+str_df_train=train.select_dtypes(include=['object'])
+x_varia= st.selectbox("Select feature", str_df_train.columns, key='x_varia')
+fig=number_loan_application(train, x_varia)
 st.pyplot(fig)
 
+
 st.subheader(":orange-background[Number of loan applications by ***Loan Intent***]")
-fig, ax = plt.subplots(nrows = 1, ncols = 1, figsize=(10, 6))
+fig, ax = plt.subplots(nrows = 1, ncols = 1, figsize=(6, 4))
 ax = sns.countplot(data=train, x='loan_intent')
 ax.set_title("Loan Intent Distribution")
 ax.set_xticklabels(ax.get_xticklabels(),rotation=45)
@@ -72,7 +83,7 @@ st.pyplot(fig)
 st.write("**The most common loan applications are in the following order: EDUCATION > MEDICAL > PERSONAL > VENTURE> DEBTCONSOLIDATION > HOMEIMPROVEMENT.**")
 
 st.subheader(":orange-background[Number of applicants by loan grade and loan status]")
-fig, ax = plt.subplots(nrows = 1, ncols = 1, figsize=(10, 6))
+fig, ax = plt.subplots(nrows = 1, ncols = 1, figsize=(6, 4))
 ax = sns.countplot(data=train, x='loan_grade',hue = 'loan_status')
 ax.set_title("Loan Default Rate by Loan Grade")
 st.pyplot(fig)
@@ -141,7 +152,7 @@ st.write(":grey-background[Pick numeric variables]")
 numeric_df_train=train.select_dtypes(include=['int64', 'float64'])
 st.write(numeric_df_train.head())
 
-st.subheader(":orange-background[correlation cross tab]")
+st.subheader(":orange-background[correlation crosstab]")
 result_corr=numeric_df_train.corr()
 st.write(result_corr)
 
@@ -169,6 +180,18 @@ st.markdown("""
 
 
 st.subheader(":orange-background[Scatter plot]")
+x_var= st.selectbox("Select X-axis variable", numeric_df_train.columns)
+st.write("You selected:", {x_var})
+y_var= st.selectbox("Select Y-axis variable", numeric_df_train.columns)
+st.write("You selected:", {y_var})
+
+if x_var and y_var:
+    fig, ax = plt.subplots()
+    ax = sns.scatterplot(data=numeric_df_train,x=x_var,y=y_var)
+    ax.set_title(f"Scatter Plot of {x_var} and {y_var}")
+st.pyplot(fig)
+st.write("correlation :", numeric_df_train[[x_var, y_var]].corr().iloc[0, 1] )
+
 def plot_custom_pairplot(df, cols_to_highlight=None, title="To check Multicollinearity build Scatter plot between features", figsize=(15, 15), title_y=1.02):
     g = sns.pairplot(df)
     g.fig.suptitle(title, y=title_y)
@@ -179,7 +202,7 @@ def plot_custom_pairplot(df, cols_to_highlight=None, title="To check Multicollin
             for j, col_var in enumerate(df.columns):
                 if (row_var, col_var) in cols_to_highlight or (col_var, row_var) in cols_to_highlight:
                     g.axes[i, j].set_facecolor('lightyellow')  # 배경색 설정 (예: 'lightyellow')
-    st.pyplot(fig)
+    st.pyplot(g)
 
 # 예시 사용: 다중공선성이 의심되는 변수 쌍을 지정하여 그래프 그리기
 cols_to_highlight = [('person_age', 'cb_person_cred_hist_length'), ('loan_amnt', 'loan_percent_income')]
@@ -204,11 +227,11 @@ def calculate_vif(df, title="VIF"):
 
 calculate_vif(numeric_df_train)
 st.markdown("""
-### Correlation Analysis
+#### Correlation Analysis
 - **person_age** and **cb_person_cred_hist_length**: High correlation observed.
 - **loan_amnt** and **loan_percent_income**: Positive correlation noted.
 
-### VIF Results
+#### VIF Results
 - Potential multicollinearity detected between **person_age** and **loan_int_rate**.
 """)
 
