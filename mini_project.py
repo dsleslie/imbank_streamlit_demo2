@@ -59,7 +59,7 @@ x_vari= st.selectbox("Select feature", str_df_train.columns)
 fig=stacked_bar_plot(train, x_vari)
 st.pyplot(fig)
 
-
+"""
 st.subheader(":orange-background[Number of loan applications by ***homeownership type***]")
 # 제목바꿔야함
 def number_loan_application(df, feature):
@@ -88,6 +88,7 @@ ax = sns.countplot(data=train, x='loan_grade',hue = 'loan_status')
 ax.set_title("Loan Default Rate by Loan Grade")
 st.pyplot(fig)
 st.write("**The higher the loan grade, the more people (0) are approved.**")
+"""
 
 st.subheader(":orange-background[Whether or not to approve a loan for someone with previous bankruptcy experience]")
 fig, ax = plt.subplots(nrows = 1, ncols = 1, figsize=(10, 6))
